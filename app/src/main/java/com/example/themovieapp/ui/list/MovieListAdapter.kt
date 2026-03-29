@@ -29,9 +29,8 @@ class MovieListAdapter(
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(movie: Movie) {
-            binding.textOverlayTitle.text = movie.title
-            binding.textSynopsis.text = movie.synopsisPreview(140)
-            binding.imagePoster.setImageResource(movie.posterResId)
+            binding.movie = movie
+            binding.executePendingBindings()
             binding.buttonDetails.setOnClickListener { onMovieClick(movie) }
             binding.buttonShare.setOnClickListener { onShareClick(movie) }
             binding.imagePoster.setOnClickListener { onMovieClick(movie) }

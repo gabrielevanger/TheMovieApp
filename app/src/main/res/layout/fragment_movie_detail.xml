@@ -1,114 +1,138 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/screen_background"
-    android:fitsSystemWindows="true"
-    android:orientation="vertical"
-    tools:context=".ui.detail.MovieDetailFragment">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/toolbar"
+    <data>
+
+        <variable
+            name="viewModel"
+            type="com.example.themovieapp.ui.MoviesViewModel" />
+    </data>
+
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="@color/app_bar_red"
-        app:navigationIconTint="@color/white"
-        app:theme="@style/ThemeOverlay.TheMovieApp.RedToolbar"
-        app:titleTextColor="@color/white" />
+        android:layout_height="match_parent"
+        android:background="@color/screen_background"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical">
 
-    <androidx.core.widget.NestedScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:clipToPadding="false"
-        android:fillViewport="true">
-
-        <LinearLayout
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:paddingBottom="24dp">
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/app_bar_red"
+            app:navigationIconTint="@color/white"
+            app:theme="@style/ThemeOverlay.TheMovieApp.RedToolbar"
+            app:titleTextColor="@color/white" />
 
-            <FrameLayout
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.core.widget.NestedScrollView
                 android:layout_width="match_parent"
-                android:layout_height="220dp">
-
-                <ImageView
-                    android:id="@+id/image_hero"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:contentDescription="@string/movie_poster"
-                    android:scaleType="centerCrop"
-                    tools:src="@android:color/darker_gray" />
-
-                <TextView
-                    android:id="@+id/text_hero_overlay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="start|top"
-                    android:layout_margin="16dp"
-                    android:shadowColor="#80000000"
-                    android:shadowDx="0"
-                    android:shadowDy="1"
-                    android:shadowRadius="4"
-                    android:textAppearance="?attr/textAppearanceTitleLarge"
-                    android:textColor="@color/white"
-                    android:textStyle="bold"
-                    tools:text="Título" />
-            </FrameLayout>
-
-            <TextView
-                android:id="@+id/text_title_with_year"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="16dp"
-                android:textAppearance="?attr/textAppearanceHeadlineSmall"
-                android:textColor="@color/black"
-                android:textStyle="bold"
-                tools:text="Filme (2014)" />
-
-            <TextView
-                android:id="@+id/text_rating"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="8dp"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="@color/text_secondary_gray"
-                tools:text="Avaliação: 86%" />
-
-            <TextView
-                android:id="@+id/text_synopsis"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="16dp"
-                android:textAppearance="?attr/textAppearanceBodyLarge"
-                android:textColor="@color/black"
-                tools:text="Sinopse completa." />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingHorizontal="16dp"
-                android:paddingTop="20dp"
-                android:text="@string/posters_carousel_label"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="@color/black" />
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/recycler_posters"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:clipToPadding="false"
-                android:nestedScrollingEnabled="false"
-                android:paddingHorizontal="12dp"
-                android:paddingTop="8dp"
-                tools:itemCount="4"
-                tools:listitem="@layout/item_poster_strip" />
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-</LinearLayout>
+                android:fillViewport="true"
+                app:detailShowWhenReady="@{viewModel.applicationDataState}"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingBottom="24dp">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp">
+
+                        <ImageView
+                            android:id="@+id/image_hero"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:contentDescription="@string/movie_poster"
+                            android:scaleType="centerCrop"
+                            tools:src="@android:color/darker_gray" />
+
+                        <TextView
+                            android:id="@+id/text_hero_overlay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="start|top"
+                            android:layout_margin="16dp"
+                            android:shadowColor="#80000000"
+                            android:shadowDx="0"
+                            android:shadowDy="1"
+                            android:shadowRadius="4"
+                            android:textAppearance="?attr/textAppearanceTitleLarge"
+                            android:textColor="@color/white"
+                            android:textStyle="bold"
+                            tools:text="Título" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:id="@+id/text_title_with_year"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="16dp"
+                        android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                        android:textColor="@color/black"
+                        android:textStyle="bold"
+                        tools:text="Filme (2014)" />
+
+                    <TextView
+                        android:id="@+id/text_rating"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="8dp"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="@color/text_secondary_gray"
+                        tools:text="Avaliação: 86%" />
+
+                    <TextView
+                        android:id="@+id/text_synopsis"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="16dp"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
+                        android:textColor="@color/black"
+                        tools:text="Sinopse completa." />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="20dp"
+                        android:text="@string/posters_carousel_label"
+                        android:textAppearance="?attr/textAppearanceTitleSmall"
+                        android:textColor="@color/black" />
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/recycler_posters"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:clipToPadding="false"
+                        android:nestedScrollingEnabled="false"
+                        android:paddingHorizontal="12dp"
+                        android:paddingTop="8dp"
+                        tools:itemCount="4"
+                        tools:listitem="@layout/item_poster_strip" />
+                </LinearLayout>
+            </androidx.core.widget.NestedScrollView>
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                app:detailLoadingInProgress="@{viewModel.applicationDataState}" />
+        </FrameLayout>
+    </LinearLayout>
+</layout>

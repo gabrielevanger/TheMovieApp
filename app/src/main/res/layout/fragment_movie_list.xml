@@ -1,35 +1,84 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/screen_background"
-    android:fitsSystemWindows="true"
-    tools:context=".ui.list.MovieListFragment">
+    xmlns:tools="http://schemas.android.com/tools">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/app_bar_red"
-        app:elevation="4dp">
+    <data>
 
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/toolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="@color/app_bar_red"
-            app:theme="@style/ThemeOverlay.TheMovieApp.RedToolbar"
-            app:titleCentered="false"
-            app:titleTextColor="@color/white" />
-    </com.google.android.material.appbar.AppBarLayout>
+        <variable
+            name="viewModel"
+            type="com.example.themovieapp.ui.MoviesViewModel" />
+    </data>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycler_movies"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:padding="8dp"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:listitem="@layout/item_movie_card" />
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        android:background="@color/screen_background"
+        android:fitsSystemWindows="true"
+        android:orientation="vertical">
+
+        <com.google.android.material.appbar.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/app_bar_red"
+            app:elevation="4dp">
+
+            <com.google.android.material.appbar.MaterialToolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/app_bar_red"
+                app:theme="@style/ThemeOverlay.TheMovieApp.RedToolbar"
+                app:titleCentered="false"
+                app:titleTextColor="@color/white" />
+        </com.google.android.material.appbar.AppBarLayout>
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_movies"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:padding="8dp"
+                app:goneUnlessSuccess="@{viewModel.applicationDataState}"
+                app:submitMovieList="@{viewModel.moviesForListFragment}"
+                tools:listitem="@layout/item_movie_card" />
+
+            <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:indeterminate="true"
+                app:goneUnlessLoading="@{viewModel.applicationDataState}" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp"
+                app:goneUnlessError="@{viewModel.applicationDataState}">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="@{viewModel.errorMessage}"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
+                    tools:text="Mensagem de erro" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/button_retry_list"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/retry" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+</layout>

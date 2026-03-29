@@ -29,6 +29,9 @@ class MovieDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.lifecycleOwner = viewLifecycleOwner
+        binding.viewModel = viewModel
+
         val navController = findNavController()
         binding.toolbar.title = getString(R.string.app_display_name)
         binding.toolbar.setupWithNavController(navController)
@@ -47,21 +50,28 @@ class MovieDetailFragment : Fragment() {
         val stripAdapter = PosterCarouselAdapter()
         binding.recyclerPosters.adapter = stripAdapter
 
-        viewModel.selectedMovie.observe(viewLifecycleOwner) { movie ->
-            if (movie == null) {
-                navController.popBackStack()
-                return@observe
+        viewModel.movieForDetailFragment.observe(viewLifecycleOwner) { movie ->
+            if (movie != null) {
+                binding.textHeroOverlay.text = movie.title
+                binding.textTitleWithYear.text = movie.titleWithYear()
+                binding.textSynopsis.text = movie.synopsis
+                binding.textRating.text = getString(R.string.rating_percent_format, movie.ratingPercent())
+                binding.imageHero.setImageResource(movie.posterResId)
+                stripAdapter.submitList(movie.galleryResIds)
+            } else {
+                binding.textHeroOverlay.text = ""
+                binding.textTitleWithYear.text = ""
+                binding.textSynopsis.text = ""
+                binding.textRating.text = ""
+                stripAdapter.submitList(emptyList())
             }
-            binding.textHeroOverlay.text = movie.title
-            binding.textTitleWithYear.text = movie.titleWithYear()
-            binding.imageHero.setImageResource(movie.posterResId)
-            binding.textSynopsis.text = movie.synopsis
-            binding.textRating.text = getString(R.string.rating_percent_format, movie.ratingPercent())
-            stripAdapter.submitList(movie.galleryResIds)
         }
     }
 
     override fun onDestroyView() {
+        if (!requireActivity().isChangingConfigurations) {
+            viewModel.onDetailLeft()
+        }
         super.onDestroyView()
         _binding = null
     }

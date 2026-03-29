@@ -17,6 +17,9 @@ data class Movie(
         return synopsis.take(maxChars).trimEnd() + "…"
     }
 
+    /** Sinopse curta para o card da lista (Data Binding). */
+    val synopsisForListCard: String get() = synopsisPreview(140)
+
     fun ratingPercent(): Int = (rating / 10f * 100f).toInt().coerceIn(0, 100)
 
     fun titleWithYear(): String = "$title ($releaseYear)"

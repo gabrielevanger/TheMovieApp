@@ -10,4 +10,8 @@
         android:id="@+id/action_overflow_about"
         android:title="@string/menu_more"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_simulate_list_error"
+        android:title="@string/simulate_error_menu"
+        app:showAsAction="never" />
 </menu>

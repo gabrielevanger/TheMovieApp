@@ -32,6 +32,9 @@ class MovieListFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        binding.lifecycleOwner = viewLifecycleOwner
+        binding.viewModel = viewModel
+
         binding.toolbar.title = getString(R.string.app_display_name)
         binding.toolbar.navigationIcon = AppCompatResources.getDrawable(requireContext(), R.drawable.ic_menu_24)
         binding.toolbar.setNavigationOnClickListener {
@@ -48,13 +51,17 @@ class MovieListFragment : Fragment() {
                     Toast.makeText(requireContext(), R.string.menu_coming_soon, Toast.LENGTH_SHORT).show()
                     true
                 }
+                R.id.action_simulate_list_error -> {
+                    viewModel.simulateListLoadError()
+                    true
+                }
                 else -> false
             }
         }
 
         adapter = MovieListAdapter(
             onMovieClick = { movie ->
-                viewModel.selectMovie(movie)
+                viewModel.selectMovieForDetail(movie)
                 findNavController().navigate(R.id.action_movieListFragment_to_movieDetailFragment)
             },
             onShareClick = { movie -> shareMovie(movie) },
@@ -62,8 +69,8 @@ class MovieListFragment : Fragment() {
         binding.recyclerMovies.layoutManager = LinearLayoutManager(requireContext())
         binding.recyclerMovies.adapter = adapter
 
-        viewModel.movies.observe(viewLifecycleOwner) { list ->
-            adapter.submitList(list)
+        binding.buttonRetryList.setOnClickListener {
+            viewModel.retryLoadMovies()
         }
     }
 
