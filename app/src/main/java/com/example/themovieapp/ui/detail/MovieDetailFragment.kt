@@ -1,0 +1,68 @@
+package com.example.themovieapp.ui.detail
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Toast
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.setupWithNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.themovieapp.R
+import com.example.themovieapp.databinding.FragmentMovieDetailBinding
+import com.example.themovieapp.ui.MoviesViewModel
+
+class MovieDetailFragment : Fragment() {
+
+    private var _binding: FragmentMovieDetailBinding? = null
+    private val binding get() = _binding!!
+
+    private val viewModel: MoviesViewModel by activityViewModels()
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
+        _binding = FragmentMovieDetailBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val navController = findNavController()
+        binding.toolbar.title = getString(R.string.app_display_name)
+        binding.toolbar.setupWithNavController(navController)
+        binding.toolbar.inflateMenu(R.menu.menu_detail)
+        binding.toolbar.setOnMenuItemClickListener {
+            if (it.itemId == R.id.action_detail_more) {
+                Toast.makeText(requireContext(), R.string.menu_coming_soon, Toast.LENGTH_SHORT).show()
+                true
+            } else {
+                false
+            }
+        }
+
+        binding.recyclerPosters.layoutManager =
+            LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+        val stripAdapter = PosterCarouselAdapter()
+        binding.recyclerPosters.adapter = stripAdapter
+
+        viewModel.selectedMovie.observe(viewLifecycleOwner) { movie ->
+            if (movie == null) {
+                navController.popBackStack()
+                return@observe
+            }
+            binding.textHeroOverlay.text = movie.title
+            binding.textTitleWithYear.text = movie.titleWithYear()
+            binding.imageHero.setImageResource(movie.posterResId)
+            binding.textSynopsis.text = movie.synopsis
+            binding.textRating.text = getString(R.string.rating_percent_format, movie.ratingPercent())
+            stripAdapter.submitList(movie.galleryResIds)
+        }
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}

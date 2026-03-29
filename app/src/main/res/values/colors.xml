@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="app_bar_red">#F44336</color>
+    <color name="screen_background">#EEEEEE</color>
+    <color name="details_button_gold">#FFB300</color>
+    <color name="text_secondary_gray">#757575</color>
+</resources>
