@@ -8,13 +8,18 @@ import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import coil.load
 import com.example.themovieapp.R
 import com.example.themovieapp.databinding.FragmentMovieDetailBinding
+import com.example.themovieapp.model.Movie
 import com.example.themovieapp.ui.MoviesViewModel
+import kotlinx.coroutines.launch
 
 class MovieDetailFragment : Fragment() {
 
@@ -52,37 +57,45 @@ class MovieDetailFragment : Fragment() {
         val stripAdapter = PosterCarouselAdapter()
         binding.recyclerPosters.adapter = stripAdapter
 
-        viewModel.movieForDetailFragment.observe(viewLifecycleOwner) { movie ->
-            if (movie != null) {
-                binding.textHeroOverlay.text = movie.title
-                binding.textTitleWithYear.text = movie.titleWithYear()
-                binding.textSynopsis.text = movie.synopsis
-                binding.textRating.text = if (movie.voteCount > 0) {
-                    getString(R.string.rating_percent_format, movie.ratingPercent())
-                } else {
-                    getString(R.string.rating_unavailable)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.movieForDetail.collect { movie ->
+                    bindDetailUi(movie, stripAdapter)
                 }
-                binding.imageHero.load(movie.heroImageUrl()) {
-                    crossfade(true)
-                    placeholder(android.R.color.darker_gray)
-                    error(android.R.color.darker_gray)
-                }
-                stripAdapter.submitImageUrls(movie.galleryImageUrls)
-                val hasPosters = movie.galleryImageUrls.isNotEmpty()
-                binding.recyclerPosters.isVisible = hasPosters
-                binding.textPostersEmpty.isVisible = !hasPosters
-                if (!hasPosters) {
-                    binding.textPostersEmpty.text = getString(R.string.posters_empty_tmdb)
-                }
-            } else {
-                binding.textHeroOverlay.text = ""
-                binding.textTitleWithYear.text = ""
-                binding.textSynopsis.text = ""
-                binding.textRating.text = ""
-                stripAdapter.submitImageUrls(emptyList())
-                binding.recyclerPosters.isVisible = false
-                binding.textPostersEmpty.isVisible = false
             }
+        }
+    }
+
+    private fun bindDetailUi(movie: Movie?, stripAdapter: PosterCarouselAdapter) {
+        if (movie != null) {
+            binding.textHeroOverlay.text = movie.title
+            binding.textTitleWithYear.text = movie.titleWithYear()
+            binding.textSynopsis.text = movie.synopsis
+            binding.textRating.text = if (movie.voteCount > 0) {
+                getString(R.string.rating_percent_format, movie.ratingPercent())
+            } else {
+                getString(R.string.rating_unavailable)
+            }
+            binding.imageHero.load(movie.heroImageUrl()) {
+                crossfade(true)
+                placeholder(android.R.color.darker_gray)
+                error(android.R.color.darker_gray)
+            }
+            stripAdapter.submitImageUrls(movie.galleryImageUrls)
+            val hasPosters = movie.galleryImageUrls.isNotEmpty()
+            binding.recyclerPosters.isVisible = hasPosters
+            binding.textPostersEmpty.isVisible = !hasPosters
+            if (!hasPosters) {
+                binding.textPostersEmpty.text = getString(R.string.posters_empty_tmdb)
+            }
+        } else {
+            binding.textHeroOverlay.text = ""
+            binding.textTitleWithYear.text = ""
+            binding.textSynopsis.text = ""
+            binding.textRating.text = ""
+            stripAdapter.submitImageUrls(emptyList())
+            binding.recyclerPosters.isVisible = false
+            binding.textPostersEmpty.isVisible = false
         }
     }
 

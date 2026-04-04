@@ -62,6 +62,7 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
+    implementation(libs.lifecycleRuntimeKtx)
     implementation(libs.androidx.recyclerview)
     implementation(libs.retrofit)
     implementation(libs.retrofitConverterGson)

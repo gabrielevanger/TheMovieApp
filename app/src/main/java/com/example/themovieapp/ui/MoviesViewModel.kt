@@ -3,7 +3,7 @@ package com.example.themovieapp.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.example.themovieapp.BuildConfig
 import com.example.themovieapp.R
@@ -12,25 +12,37 @@ import com.example.themovieapp.data.remote.TmdbRetrofit
 import com.example.themovieapp.data.remote.toMovie
 import com.example.themovieapp.data.remote.toTmdbPosterUrl
 import com.example.themovieapp.model.Movie
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
+import kotlinx.coroutines.withContext
 
+/**
+ * Estado exposto como [StateFlow] (fonte única) e espelhado em [LiveData] via [asLiveData]
+ * para o Data Binding. Operações de rede rodam em [Dispatchers.IO]; atualizações de estado
+ * voltam à Main após o [withContext]. O [viewModelScope] é cancelado com o ViewModel
+ * (ligado à Activity com [androidx.fragment.app.activityViewModels]), evitando trabalho
+ * após destruição do dono do ciclo de vida.
+ */
 class MoviesViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _moviesForListFragment = MutableLiveData<List<Movie>>(emptyList())
-    val moviesForListFragment: LiveData<List<Movie>> = _moviesForListFragment
+    private val _movies = MutableStateFlow<List<Movie>>(emptyList())
+    val moviesForListFragment: LiveData<List<Movie>> = _movies.asLiveData()
 
-    private val _movieForDetailFragment = MutableLiveData<Movie?>()
-    val movieForDetailFragment: LiveData<Movie?> = _movieForDetailFragment
+    private val _detailMovie = MutableStateFlow<Movie?>(null)
+    val movieForDetail: StateFlow<Movie?> = _detailMovie.asStateFlow()
 
-    private val _applicationDataState = MutableLiveData(DataState.State.Loading)
-    val applicationDataState: LiveData<DataState.State> = _applicationDataState
+    private val _applicationDataState = MutableStateFlow(DataState.State.Loading)
+    val applicationDataState: LiveData<DataState.State> = _applicationDataState.asLiveData()
 
-    private val _errorMessage = MutableLiveData("")
-    val errorMessage: LiveData<String> = _errorMessage
+    private val _errorMessage = MutableStateFlow("")
+    val errorMessage: LiveData<String> = _errorMessage.asLiveData()
 
     private var loadListJob: Job? = null
     private var detailJob: Job? = null
@@ -48,10 +60,12 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
             _applicationDataState.value = DataState.State.Loading
-            _moviesForListFragment.value = emptyList()
+            _movies.value = emptyList()
             try {
-                val latest = TmdbRetrofit.api.getLatestMovie(BuildConfig.TMDB_API_KEY)
-                _moviesForListFragment.value = listOf(latest.toMovie())
+                val latest = withContext(Dispatchers.IO) {
+                    TmdbRetrofit.api.getLatestMovie(BuildConfig.TMDB_API_KEY)
+                }
+                _movies.value = listOf(latest.toMovie())
                 _applicationDataState.value = DataState.State.Success
             } catch (_: Exception) {
                 _errorMessage.value = DEFAULT_LIST_ERROR
@@ -66,7 +80,7 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
 
     fun simulateListLoadError() {
         loadListJob?.cancel()
-        viewModelScope.launch {
+        loadListJob = viewModelScope.launch {
             _applicationDataState.value = DataState.State.Loading
             delay(SIMULATED_ERROR_DELAY_MS)
             _errorMessage.value = DEFAULT_LIST_ERROR
@@ -83,14 +97,14 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
             _applicationDataState.value = DataState.State.Loading
-            _movieForDetailFragment.value = null
+            _detailMovie.value = null
             try {
                 val movieId = movie.id.toInt()
-                coroutineScope {
-                    val detailsDef = async {
+                supervisorScope {
+                    val detailsDef = async(Dispatchers.IO) {
                         TmdbRetrofit.api.getMovieDetails(movieId, BuildConfig.TMDB_API_KEY)
                     }
-                    val imagesDef = async {
+                    val imagesDef = async(Dispatchers.IO) {
                         TmdbRetrofit.api.getMovieImages(movieId, BuildConfig.TMDB_API_KEY)
                     }
                     val details = detailsDef.await()
@@ -98,11 +112,11 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
                     val posterUrls = images.posters.orEmpty()
                         .mapNotNull { it.filePath.toTmdbPosterUrl() }
                         .distinct()
-                    _movieForDetailFragment.value = details.toMovie(galleryImageUrls = posterUrls)
+                    _detailMovie.value = details.toMovie(galleryImageUrls = posterUrls)
                     _applicationDataState.value = DataState.State.Success
                 }
             } catch (_: Exception) {
-                _movieForDetailFragment.value = movie
+                _detailMovie.value = movie
                 _applicationDataState.value = DataState.State.Success
             }
         }
@@ -110,8 +124,8 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onDetailLeft() {
         detailJob?.cancel()
-        _movieForDetailFragment.value = null
-        if (!_moviesForListFragment.value.isNullOrEmpty()) {
+        _detailMovie.value = null
+        if (_movies.value.isNotEmpty()) {
             _applicationDataState.value = DataState.State.Success
         }
     }
