@@ -10,9 +10,12 @@ import com.example.themovieapp.R
 import com.example.themovieapp.data.DataState
 import com.example.themovieapp.data.local.MoviesLocalDataSource
 import com.example.themovieapp.data.local.TheMovieDatabase
+import com.example.themovieapp.data.remote.MoviesRemoteDataSource
 import com.example.themovieapp.data.remote.TmdbRetrofit
 import com.example.themovieapp.data.remote.toMovie
 import com.example.themovieapp.data.remote.toTmdbPosterUrl
+import com.example.themovieapp.data.repository.MovieListRefreshResult
+import com.example.themovieapp.data.repository.MoviesRepository
 import com.example.themovieapp.model.Movie
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,17 +29,20 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 
 /**
- * Lista: [moviesForListFragment] vem do Room via [LiveData] (reativo). Após sucesso da API TMDB,
- * os filmes são persistidos com [MoviesLocalDataSource.saveMoviesFromApi]. Rede em [Dispatchers.IO];
- * [viewModelScope] cancela com o fim do ViewModel da Activity.
+ * Lista: [moviesForListFragment] vem do [MoviesRepository.observeMovies] (LiveData reativo ao Room).
+ * O repositório tenta a API primeiro e, em falha, usa cache local quando existir. Detalhe do filme
+ * continua via Retrofit direto na ViewModel (sem persistência de detalhe).
  */
 class MoviesViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val moviesLocal: MoviesLocalDataSource = MoviesLocalDataSource(
-        TheMovieDatabase.getInstance(application).movieDao(),
+    private val moviesRepository: MoviesRepository = MoviesRepository(
+        remote = MoviesRemoteDataSource(),
+        local = MoviesLocalDataSource(
+            TheMovieDatabase.getInstance(application).movieDao(),
+        ),
     )
 
-    val moviesForListFragment: LiveData<List<Movie>> = moviesLocal.observeMovies()
+    val moviesForListFragment: LiveData<List<Movie>> = moviesRepository.observeMovies()
 
     private val _detailMovie = MutableStateFlow<Movie?>(null)
     val movieForDetail: StateFlow<Movie?> = _detailMovie.asStateFlow()
@@ -51,36 +57,33 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
     private var detailJob: Job? = null
 
     init {
-        loadMoviesFromApi()
+        refreshMovieList()
     }
 
-    fun loadMoviesFromApi() {
+    fun refreshMovieList() {
         loadListJob?.cancel()
         loadListJob = viewModelScope.launch {
-            if (BuildConfig.TMDB_API_KEY.isBlank()) {
-                _errorMessage.value = getApplication<Application>().getString(R.string.tmdb_key_missing)
-                _applicationDataState.value = DataState.State.Error
-                return@launch
-            }
             _applicationDataState.value = DataState.State.Loading
-            try {
-                val latest = withContext(Dispatchers.IO) {
-                    TmdbRetrofit.api.getLatestMovie(BuildConfig.TMDB_API_KEY)
+            when (moviesRepository.refreshMovieList(BuildConfig.TMDB_API_KEY)) {
+                MovieListRefreshResult.ApiKeyMissing -> {
+                    _errorMessage.value = getApplication<Application>().getString(R.string.tmdb_key_missing)
+                    _applicationDataState.value = DataState.State.Error
                 }
-                val movies = listOf(latest.toMovie())
-                withContext(Dispatchers.IO) {
-                    moviesLocal.saveMoviesFromApi(movies)
+                MovieListRefreshResult.NetworkSuccess,
+                MovieListRefreshResult.CacheUsed,
+                -> {
+                    _applicationDataState.value = DataState.State.Success
                 }
-                _applicationDataState.value = DataState.State.Success
-            } catch (_: Exception) {
-                _errorMessage.value = DEFAULT_LIST_ERROR
-                _applicationDataState.value = DataState.State.Error
+                MovieListRefreshResult.NetworkFailure -> {
+                    _errorMessage.value = DEFAULT_LIST_ERROR
+                    _applicationDataState.value = DataState.State.Error
+                }
             }
         }
     }
 
     fun retryLoadMovies() {
-        loadMoviesFromApi()
+        refreshMovieList()
     }
 
     fun simulateListLoadError() {
@@ -131,7 +134,7 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
         detailJob?.cancel()
         _detailMovie.value = null
         viewModelScope.launch {
-            val hasMovies = withContext(Dispatchers.IO) { moviesLocal.hasMovies() }
+            val hasMovies = moviesRepository.hasCachedMovies()
             if (hasMovies) {
                 _applicationDataState.value = DataState.State.Success
             }
