@@ -14,8 +14,11 @@
     <string name="rating_label">Avaliação</string>
     <string name="rating_format">%.1f / 10</string>
     <string name="rating_percent_format">Avaliação: %d%%</string>
+    <string name="rating_unavailable">Ainda sem avaliação no TMDB (0 votos).</string>
     <string name="synopsis_label">Sinopse</string>
     <string name="posters_carousel_label">Pôsteres</string>
+    <string name="posters_empty_tmdb">Nenhuma imagem cadastrada no TMDB para este título.</string>
     <string name="retry">Tentar novamente</string>
     <string name="simulate_error_menu">Simular erro ao carregar</string>
+    <string name="tmdb_key_missing">Defina TMDB_API_KEY no arquivo local.properties na raiz do projeto e faça um Sync do Gradle.</string>
 </resources>

@@ -5,11 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.recyclerview.widget.LinearLayoutManager
+import coil.load
 import com.example.themovieapp.R
 import com.example.themovieapp.databinding.FragmentMovieDetailBinding
 import com.example.themovieapp.ui.MoviesViewModel
@@ -55,15 +57,31 @@ class MovieDetailFragment : Fragment() {
                 binding.textHeroOverlay.text = movie.title
                 binding.textTitleWithYear.text = movie.titleWithYear()
                 binding.textSynopsis.text = movie.synopsis
-                binding.textRating.text = getString(R.string.rating_percent_format, movie.ratingPercent())
-                binding.imageHero.setImageResource(movie.posterResId)
-                stripAdapter.submitList(movie.galleryResIds)
+                binding.textRating.text = if (movie.voteCount > 0) {
+                    getString(R.string.rating_percent_format, movie.ratingPercent())
+                } else {
+                    getString(R.string.rating_unavailable)
+                }
+                binding.imageHero.load(movie.heroImageUrl()) {
+                    crossfade(true)
+                    placeholder(android.R.color.darker_gray)
+                    error(android.R.color.darker_gray)
+                }
+                stripAdapter.submitImageUrls(movie.galleryImageUrls)
+                val hasPosters = movie.galleryImageUrls.isNotEmpty()
+                binding.recyclerPosters.isVisible = hasPosters
+                binding.textPostersEmpty.isVisible = !hasPosters
+                if (!hasPosters) {
+                    binding.textPostersEmpty.text = getString(R.string.posters_empty_tmdb)
+                }
             } else {
                 binding.textHeroOverlay.text = ""
                 binding.textTitleWithYear.text = ""
                 binding.textSynopsis.text = ""
                 binding.textRating.text = ""
-                stripAdapter.submitList(emptyList())
+                stripAdapter.submitImageUrls(emptyList())
+                binding.recyclerPosters.isVisible = false
+                binding.textPostersEmpty.isVisible = false
             }
         }
     }

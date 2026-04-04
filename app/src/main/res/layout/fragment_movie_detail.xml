@@ -105,6 +105,7 @@
                         tools:text="Sinopse completa." />
 
                     <TextView
+                        android:id="@+id/text_posters_label"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:paddingHorizontal="16dp"
@@ -112,6 +113,18 @@
                         android:text="@string/posters_carousel_label"
                         android:textAppearance="?attr/textAppearanceTitleSmall"
                         android:textColor="@color/black" />
+
+                    <TextView
+                        android:id="@+id/text_posters_empty"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingHorizontal="16dp"
+                        android:paddingTop="8dp"
+                        android:textAppearance="?attr/textAppearanceBodyMedium"
+                        android:textColor="@color/text_secondary_gray"
+                        android:visibility="gone"
+                        tools:text="Nenhuma imagem…"
+                        tools:visibility="visible" />
 
                     <androidx.recyclerview.widget.RecyclerView
                         android:id="@+id/recycler_posters"

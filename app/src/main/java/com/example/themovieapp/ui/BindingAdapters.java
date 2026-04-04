@@ -1,8 +1,12 @@
 package com.example.themovieapp.ui;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.widget.ImageView;
 import androidx.annotation.Nullable;
+import coil.Coil;
+import coil.request.ImageRequest;
 import androidx.databinding.BindingAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.themovieapp.data.DataState;
@@ -20,6 +24,20 @@ public final class BindingAdapters {
         if (resId != null && resId != 0) {
             view.setImageResource(resId);
         }
+    }
+
+    /** Pôster por URL (Coil); em Java para o Data Binding reconhecer o adapter. */
+    @BindingAdapter("posterLoadUrl")
+    public static void setPosterLoadUrl(ImageView view, @Nullable String url) {
+        ColorDrawable placeholder = new ColorDrawable(Color.DKGRAY);
+        ImageRequest request = new ImageRequest.Builder(view.getContext())
+                .data(url)
+                .crossfade(true)
+                .placeholder(placeholder)
+                .error(placeholder)
+                .target(view)
+                .build();
+        Coil.imageLoader(view.getContext()).enqueue(request);
     }
 
     @BindingAdapter("submitMovieList")

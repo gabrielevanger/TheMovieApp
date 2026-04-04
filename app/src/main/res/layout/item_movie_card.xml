@@ -33,7 +33,7 @@
                     android:layout_height="match_parent"
                     android:contentDescription="@string/movie_poster"
                     android:scaleType="centerCrop"
-                    app:imageResource="@{movie.posterResId}"
+                    app:posterLoadUrl="@{movie.posterUrl}"
                     tools:src="@android:color/darker_gray" />
 
                 <TextView
