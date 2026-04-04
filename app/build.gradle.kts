@@ -2,6 +2,7 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
+    alias(libs.plugins.ksp)
 }
 
 val localProperties = Properties().apply {
@@ -69,6 +70,9 @@ dependencies {
     implementation(libs.okhttpLogging)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil)
+    implementation(libs.roomRuntime)
+    implementation(libs.roomKtx)
+    ksp(libs.roomCompiler)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

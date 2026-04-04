@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.themovieapp.BuildConfig
 import com.example.themovieapp.R
 import com.example.themovieapp.data.DataState
+import com.example.themovieapp.data.local.MoviesLocalDataSource
+import com.example.themovieapp.data.local.TheMovieDatabase
 import com.example.themovieapp.data.remote.TmdbRetrofit
 import com.example.themovieapp.data.remote.toMovie
 import com.example.themovieapp.data.remote.toTmdbPosterUrl
@@ -24,16 +26,17 @@ import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 
 /**
- * Estado exposto como [StateFlow] (fonte única) e espelhado em [LiveData] via [asLiveData]
- * para o Data Binding. Operações de rede rodam em [Dispatchers.IO]; atualizações de estado
- * voltam à Main após o [withContext]. O [viewModelScope] é cancelado com o ViewModel
- * (ligado à Activity com [androidx.fragment.app.activityViewModels]), evitando trabalho
- * após destruição do dono do ciclo de vida.
+ * Lista: [moviesForListFragment] vem do Room via [LiveData] (reativo). Após sucesso da API TMDB,
+ * os filmes são persistidos com [MoviesLocalDataSource.saveMoviesFromApi]. Rede em [Dispatchers.IO];
+ * [viewModelScope] cancela com o fim do ViewModel da Activity.
  */
 class MoviesViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _movies = MutableStateFlow<List<Movie>>(emptyList())
-    val moviesForListFragment: LiveData<List<Movie>> = _movies.asLiveData()
+    private val moviesLocal: MoviesLocalDataSource = MoviesLocalDataSource(
+        TheMovieDatabase.getInstance(application).movieDao(),
+    )
+
+    val moviesForListFragment: LiveData<List<Movie>> = moviesLocal.observeMovies()
 
     private val _detailMovie = MutableStateFlow<Movie?>(null)
     val movieForDetail: StateFlow<Movie?> = _detailMovie.asStateFlow()
@@ -60,12 +63,14 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
                 return@launch
             }
             _applicationDataState.value = DataState.State.Loading
-            _movies.value = emptyList()
             try {
                 val latest = withContext(Dispatchers.IO) {
                     TmdbRetrofit.api.getLatestMovie(BuildConfig.TMDB_API_KEY)
                 }
-                _movies.value = listOf(latest.toMovie())
+                val movies = listOf(latest.toMovie())
+                withContext(Dispatchers.IO) {
+                    moviesLocal.saveMoviesFromApi(movies)
+                }
                 _applicationDataState.value = DataState.State.Success
             } catch (_: Exception) {
                 _errorMessage.value = DEFAULT_LIST_ERROR
@@ -125,8 +130,11 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
     fun onDetailLeft() {
         detailJob?.cancel()
         _detailMovie.value = null
-        if (_movies.value.isNotEmpty()) {
-            _applicationDataState.value = DataState.State.Success
+        viewModelScope.launch {
+            val hasMovies = withContext(Dispatchers.IO) { moviesLocal.hasMovies() }
+            if (hasMovies) {
+                _applicationDataState.value = DataState.State.Success
+            }
         }
     }
 
