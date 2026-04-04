@@ -6,7 +6,7 @@ import com.example.themovieapp.model.Movie
  * Origem remota da listagem: apenas TMDB via Retrofit.
  */
 class MoviesRemoteDataSource(
-    private val api: TmdbApiService = TmdbRetrofit.api,
+    private val api: TmdbApiService,
 ) {
 
     suspend fun fetchLatestMovies(apiKey: String): List<Movie> {

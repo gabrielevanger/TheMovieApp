@@ -2,17 +2,17 @@ package com.example.themovieapp
 
 import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.themovieapp.ui.MoviesViewModel
+import org.koin.androidx.viewmodel.ext.android.viewModel
 
 class MainActivity : AppCompatActivity() {
 
-    /** Escopo da Activity; os fragments usam `activityViewModels()` para a mesma instância. */
+    /** Escopo da Activity; os fragments usam `activityViewModel()` para a mesma instância. */
     @Suppress("unused")
-    private val moviesViewModel: MoviesViewModel by viewModels()
+    private val moviesViewModel: MoviesViewModel by viewModel()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

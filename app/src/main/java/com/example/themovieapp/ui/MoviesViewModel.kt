@@ -8,10 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.themovieapp.BuildConfig
 import com.example.themovieapp.R
 import com.example.themovieapp.data.DataState
-import com.example.themovieapp.data.local.MoviesLocalDataSource
-import com.example.themovieapp.data.local.TheMovieDatabase
-import com.example.themovieapp.data.remote.MoviesRemoteDataSource
-import com.example.themovieapp.data.remote.TmdbRetrofit
+import com.example.themovieapp.data.remote.TmdbApiService
 import com.example.themovieapp.data.remote.toMovie
 import com.example.themovieapp.data.remote.toTmdbPosterUrl
 import com.example.themovieapp.data.repository.MovieListRefreshResult
@@ -26,21 +23,17 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.supervisorScope
-import kotlinx.coroutines.withContext
 
 /**
  * Lista: [moviesForListFragment] vem do [MoviesRepository.observeMovies] (LiveData reativo ao Room).
- * O repositório tenta a API primeiro e, em falha, usa cache local quando existir. Detalhe do filme
- * continua via Retrofit direto na ViewModel (sem persistência de detalhe).
+ * Dependências fornecidas por Koin ([MoviesRepository], [TmdbApiService]). Detalhe do filme usa a API
+ * diretamente (sem persistência de detalhe).
  */
-class MoviesViewModel(application: Application) : AndroidViewModel(application) {
-
-    private val moviesRepository: MoviesRepository = MoviesRepository(
-        remote = MoviesRemoteDataSource(),
-        local = MoviesLocalDataSource(
-            TheMovieDatabase.getInstance(application).movieDao(),
-        ),
-    )
+class MoviesViewModel(
+    application: Application,
+    private val moviesRepository: MoviesRepository,
+    private val tmdbApi: TmdbApiService,
+) : AndroidViewModel(application) {
 
     val moviesForListFragment: LiveData<List<Movie>> = moviesRepository.observeMovies()
 
@@ -110,10 +103,10 @@ class MoviesViewModel(application: Application) : AndroidViewModel(application) 
                 val movieId = movie.id.toInt()
                 supervisorScope {
                     val detailsDef = async(Dispatchers.IO) {
-                        TmdbRetrofit.api.getMovieDetails(movieId, BuildConfig.TMDB_API_KEY)
+                        tmdbApi.getMovieDetails(movieId, BuildConfig.TMDB_API_KEY)
                     }
                     val imagesDef = async(Dispatchers.IO) {
-                        TmdbRetrofit.api.getMovieImages(movieId, BuildConfig.TMDB_API_KEY)
+                        tmdbApi.getMovieImages(movieId, BuildConfig.TMDB_API_KEY)
                     }
                     val details = detailsDef.await()
                     val images = imagesDef.await()

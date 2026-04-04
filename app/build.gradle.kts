@@ -50,6 +50,9 @@ android {
         viewBinding = true
         dataBinding = true
     }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true
+    }
 }
 
 dependencies {
@@ -73,7 +76,14 @@ dependencies {
     implementation(libs.roomRuntime)
     implementation(libs.roomKtx)
     ksp(libs.roomCompiler)
+    implementation(libs.koin.android)
     testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.arch.core.testing)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

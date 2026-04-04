@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -20,13 +19,14 @@ import com.example.themovieapp.databinding.FragmentMovieDetailBinding
 import com.example.themovieapp.model.Movie
 import com.example.themovieapp.ui.MoviesViewModel
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.activityViewModel
 
 class MovieDetailFragment : Fragment() {
 
     private var _binding: FragmentMovieDetailBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MoviesViewModel by activityViewModels()
+    private val viewModel: MoviesViewModel by activityViewModel()
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentMovieDetailBinding.inflate(inflater, container, false)
